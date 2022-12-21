@@ -1,0 +1,31 @@
+{
+  "name": "backend-graphql",
+  "version": "1.0.0",
+  "description": "Medium Clone",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ITRVN-Training/backend-graphql.git"
+  },
+  "keywords": [],
+  "author": "ITRVN",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ITRVN-Training/backend-graphql/issues"
+  },
+  "homepage": "https://github.com/ITRVN-Training/backend-graphql#readme",
+  "dependencies": {
+    "apollo-server-express": "^2.24.0",
+    "argon2": "^0.30.2",
+    "dataloader": "^2.1.0",
+    "express": "^4.18.2",
+    "graphql": "^15.5.0",
+    "lodash": "^4.17.21",
+    "mongoose": "^6.8.1",
+    "redis": "^4.5.1",
+    "winston": "^3.8.2"
+  }
+}
