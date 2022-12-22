@@ -1,0 +1,10 @@
+type Comment {
+  _id: ID
+  title: Strimg
+  content: String
+  User: User
+  post: Post
+
+  createdAt: DateTime
+  updatedAt: DateTime
+}

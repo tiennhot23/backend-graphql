@@ -1,0 +1,6 @@
+input ReplyCommentInput {
+  commentId: ID!
+
+  title: String
+  content: String
+}

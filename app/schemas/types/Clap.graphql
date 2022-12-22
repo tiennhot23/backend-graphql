@@ -1,0 +1,11 @@
+type Clap {
+  _id: ID
+  user: User
+  post: Post
+  count: Int
+
+  comment: Comment
+
+  createdAt: DateTime
+  updatedAt: DateTime
+}

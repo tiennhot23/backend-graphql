@@ -1,0 +1,13 @@
+type Post {
+  _id: ID
+  title: String
+  content: String
+  owner: User
+
+  status: String
+
+  createdAt: DateTime
+  updatedAt: DateTime
+
+  clapCount: Int
+}

@@ -1,0 +1,17 @@
+type User {
+  _id: ID
+  firstName: String
+  lastName: String
+  email: String
+  username: String
+  role: String
+
+  photo: String
+  bio: String
+  status: String
+
+  createdAt: DateTime
+  updatedAt: DateTime
+
+  followerCount: Int
+}

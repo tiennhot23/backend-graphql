@@ -1,0 +1,22 @@
+type Mutation {
+  register(email: String!, username: String!, password: String!): User
+
+  follow(followee: ID): GeneralResponse
+  unfollow(followee: ID): GeneralResponse
+
+  createPost(title: String!, content: String!, status: String!): Post
+  updatePost(input: UpdatePostInput!): Post
+  deletePost(_id: ID): GeneralResponse
+  hidePost(_id: ID): GeneralResponse
+
+  clapPost(postId: ID, count: Int): GeneralResponse
+  unclapPost(postId: ID): GeneralResponse
+
+  clapComment(commentId: ID, count: Int): GeneralResponse
+  unclapComment(commentId: ID): GeneralResponse
+
+  comment(input: CommentInput): Comment
+  updateComment(input: UpdateCommentInput): Comment
+  reply(input: ReplyCommentInput): Comment
+  deleteComment(_id: ID!): GeneralResponse
+}

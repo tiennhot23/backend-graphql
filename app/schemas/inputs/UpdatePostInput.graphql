@@ -1,0 +1,6 @@
+input UpdatePostInput {
+  id: ID!
+  title: String!
+  content: String!
+  status: String!
+}

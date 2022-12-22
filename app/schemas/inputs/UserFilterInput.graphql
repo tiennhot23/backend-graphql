@@ -1,0 +1,6 @@
+input UserFilterInput {
+  _id: ID
+  username: String
+  email: String
+  name: String
+}
