@@ -2,6 +2,14 @@ const { createLogger, format, transports } = require('winston');
 
 const { combine, printf, errors } = format;
 
+const Colors = {
+  info: '\x1b[36m',
+  error: '\x1b[31m',
+  warn: '\x1b[33m',
+  verbose: '\x1b[43m',
+  debug: '\x1b[43m',
+};
+
 const logger = createLogger({
   exitOnError: false,
   levels: {
@@ -16,9 +24,9 @@ const logger = createLogger({
       const splat = info[Symbol.for('splat')];
       if (splat) {
         // const meta = util.inspect(splat[0], false, null);
-        return `[${info.level}] ${info.message} - meta: ${JSON.stringify(splat[0])}`;
+        return `${Colors[info.level]}[${info.level}] ${info.message} - meta: ${JSON.stringify(splat[0])}\x1b[0m`;
       }
-      return `[${info.level}] ${info.message} `;
+      return `${Colors[info.level]}[${info.level}] ${info.message} \x1b[0m`;
     }),
     errors({ stack: true }),
   ),

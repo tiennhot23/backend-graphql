@@ -1,6 +1,6 @@
 type Comment {
   _id: ID
-  title: Strimg
+  title: String
   content: String
   User: User
   post: Post

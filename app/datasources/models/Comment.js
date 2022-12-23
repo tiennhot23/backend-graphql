@@ -11,4 +11,4 @@ const Comment = new mongoose.Schema({
   parent: { type: ObjectId },
 }, { timestamps: true });
 
-module.exports = mongoose.model('claps', Comment);
+module.exports = mongoose.model('comments', Comment);

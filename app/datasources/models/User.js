@@ -3,10 +3,11 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const UserSchema = new Schema({
-  firstName: String,
-  lastName: String,
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
   role: { type: String, enum: ['User', 'Admin'], default: 'User' },
 
   photo: { type: String },
@@ -14,4 +15,4 @@ const UserSchema = new Schema({
   status: { type: String, enum: ['Active', 'Deactivated'] },
 }, { timestamps: true });
 
-module.exports = mongoose.model('user', UserSchema);
+module.exports = mongoose.model('users', UserSchema);

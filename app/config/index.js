@@ -1,9 +1,9 @@
 const server = require('./server');
-const mongo = require('./mongo');
+const mongodb = require('./mongodb');
 const redis = require('./redis');
 
 module.exports = {
   ...server,
-  ...mongo,
+  ...mongodb,
   ...redis,
 };

@@ -10,4 +10,4 @@ const postSchema = new mongoose.Schema({
   status: { type: String, enum: ['Draft', 'Visible', 'Hidden', 'Deleted'] },
 }, { timestamps: true });
 
-module.exports = mongoose.model('Posts', postSchema);
+module.exports = mongoose.model('posts', postSchema);
