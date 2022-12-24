@@ -1,5 +1,7 @@
-const { PostModel } = require('../../models');
+const { PostModel, ClapModel } = require('../../models');
 const { gqlSelectedField } = require('../../utils/helpers');
+const { cachingStore } = require('../../utils/redis/stores');
+const { getCachedUserById } = require('../../utils/controllers');
 
 async function getPost({ _id }, context, info) {
   const projection = gqlSelectedField.selectTopFields(info);
@@ -17,14 +19,26 @@ async function getPosts({ input }, context, info) {
   return posts;
 }
 
-// async function getPostClaps({ _id }, args, { loaders }) {
-//   const { userLoader } = loaders;
-//   return userLoader.loadMany(claps);
-// }
+async function getPostClapCount({ _id }, __, ___) {
+  const cachedClapCount = await cachingStore.get(`post:${_id}:clapCount`);
+  if (!cachedClapCount || cachedClapCount < 1000) {
+    const { clapCount } = await ClapModel.aggregate([
+      { $match: { post: _id } },
+      { $group: { _id: null, clapCount: { $sum: '$count' } } },
+      { $project: { _id: 0, clapCount: 1 } },
+    ]);
 
-// async function getCreator({ creator }, args, { loaders }) {
-//   const { userLoader } = loaders;
-//   return userLoader.load(creator);
-// }
+    await cachingStore.set(`post:${_id}:clapCount`, clapCount, { EX: 3600 });
+    if (clapCount > 1000) await cachingStore.zAdd('post:topClapCount', clapCount, _id);
 
-module.exports = { getPost, getPosts };
+    return clapCount;
+  }
+  return cachedClapCount;
+}
+
+async function getPostOwner({ owner: ownerId }, __, ____) {
+  const owner = await getCachedUserById(ownerId);
+  return owner;
+}
+
+module.exports = { getPost, getPosts, getPostClapCount, getPostOwner };

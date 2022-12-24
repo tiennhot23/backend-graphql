@@ -1,55 +1,51 @@
 const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
+
 const { UserModel } = require('../../models');
+const { LoginResponse, GeneralResponse } = require('../../utils/responses');
+const {
+  cacheUser,
+  saveAccessToken,
+  removeAccessToken,
+} = require('../../utils/controllers');
+const { hash: hashConfig } = require('../../../config');
 
-const { encrypt: encryptConfig } = require('../../configs');
-const { validate, validateAuth, validateUser, validatePassword } = require('../../validations');
-const { MutationResponse } = require('../../graphql/types/MutationResponse');
-
-async function login(parent, { email, password }, { req, res, caching }) {
-  const { error } = validateAuth({ email, password });
-  if (error) throw new AppError(400, error.message);
-
-  const user = await UserModel.findOne({ email }, 'password').lean();
+async function login({ username, password }, { res }) {
+  const user = await UserModel.findOne({ username }, 'password').lean();
   if (!user || !(await bcrypt.compare(password, user.password))) {
-    throw new AppError(404, 'Username or password not match');
+    throw new Error('Username or password not match');
   }
 
-  req.session.userId = user._id;
-  const deviceid = uuidv4();
+  const deviceId = uuidv4();
+  const accessToken = uuidv4();
   res.cookie('uid', user._id.toHexString());
-  res.cookie('deviceid', deviceid);
-  await caching.call('hset', `user:${user._id}:sessions`, `${deviceid}`, `sess:${req.sessionID}`);
+  res.cookie('deviceId', deviceId);
 
-  return new MutationResponse('Logged in');
+  await saveAccessToken(user._id, deviceId, accessToken);
+
+  return new LoginResponse(true, 'Logged in', accessToken);
 }
 
-async function createUser(parent, { name, email, password, repeatPassword }) {
-  const { error } = validate(
-    validateUser({ name, email }),
-    validatePassword({ password, repeatPassword }),
-  );
-  if (error) throw new AppError(400, error.message);
-
-  if (await UserModel.exists({ email })) {
-    throw new AppError(400, 'Email is already used');
+async function createUser({ email, username, password }) {
+  if (await UserModel.exists({ $or: [{ email }, { username }] })) {
+    throw new Error('Email or username is already used');
   }
-  const hashPassword = await bcrypt.hash(password, encryptConfig.saltRound);
-  await UserModel.create({ email, name, password: hashPassword });
+  const hashPassword = await bcrypt.hash(password, hashConfig.saltRound);
+  const user = await UserModel.create({ email, username, password: hashPassword });
 
-  return new MutationResponse('User created');
+  await cacheUser(user);
+
+  return user;
 }
 
-async function logout(parent, args, { req, res, caching, user }) {
-  if (!user) throw new AppError(403, 'Please login to continue');
-  const { uid, deviceid } = req.cookie;
-  await caching.call('hdel', `user:${uid}:sessions`, `${deviceid}`);
-  req.session.destroy();
-  res.clearCookie('uid');
-  res.clearCookie('deviceid');
-  res.clearCookie('sid');
+async function logout(args, { req, res }) {
+  const { uid, deviceId } = req.cookie;
+  await removeAccessToken(uid, deviceId);
 
-  return new MutationResponse('Logged out');
+  res.clearCookie('uid');
+  res.clearCookie('deviceId');
+
+  return new GeneralResponse(true, 'Logged out');
 }
 
 module.exports = { login, createUser, logout };
