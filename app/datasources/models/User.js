@@ -12,7 +12,7 @@ const UserSchema = new Schema({
 
   photo: { type: String },
   bio: { type: String },
-  status: { type: String, enum: ['Active', 'Deactivated'] },
+  status: { type: String, default: 'Active', enum: ['Active', 'Deactivated'] },
 }, { timestamps: true });
 
 module.exports = mongoose.model('users', UserSchema);

@@ -1,0 +1,3 @@
+directive @auth(
+  requires: UserRole = Admin,
+) on OBJECT | FIELD_DEFINITION
