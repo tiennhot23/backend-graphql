@@ -5,13 +5,7 @@ async function getMe(args, { authUser }) {
   return authUser;
 }
 
-async function getUser({ input }, { authUser }, info) {
-  if (authUser.role !== 'Admin') {
-    throw new Error('Forbidden');
-  }
-
-  // TODO - validate empty input
-
+async function getUser({ input }, __, info) {
   const { _id, username, email, name: lastName } = input;
   const projection = gqlSelectedField.selectTopFields(info);
   const user = await UserModel.findOne({ _id, username, email, lastName }, projection).lean();

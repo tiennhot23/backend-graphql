@@ -17,22 +17,34 @@ async function getCachedPostById(postId) {
 
 async function cachePost(post, ownerId) {
   const cachingCommands = [];
-  await cachingStore.set(post._id, JSON.stringify(_.pick(post, '_id title owner')));
 
-  cachingCommands.push(cachingStore.set(`post:${post._id}`, JSON.stringify(_.pick(post, '_id title owner'))));
-  cachingCommands.push(cachingStore.lSet('newfeeds', post._id));
-  if ((await cachingStore.lLen('newfeeds')) > 10000) {
-    cachingCommands.push(cachingStore.rPop('newfeeds'));
+  cachingCommands.push(cachingStore.set(`post:${post._id}`, JSON.stringify(_.pick(post, ['_id', 'title', 'owner']))));
+  cachingCommands.push(cachingStore.hSet('newfeeds', `${post._id}`, `${ownerId}`));
+  if ((await cachingStore.hLen('newfeeds')) > 10000) {
+    cachingCommands.push(cachingStore.hDel('newfeeds', `${post._id}`));
   }
   // TODO - can followers be fetched from cached ?
   // NOTE: maybe duplicate post when the follower's newfeed is too short,
   // so global newfeed must be added to generate follower's newfeed
   const followers = await FollowModel.find({ followee: ownerId }, 'followers').lean();
   _.forEach(followers, async follower => {
-    cachingCommands.push(cachingStore.lSet(`user:${follower}:newfeeds`, post._id));
-    if ((await cachingStore.lLen(`user:${follower}:newfeeds`)) > 10000) {
-      cachingCommands.push(cachingStore.rPop(`user:${follower}:newfeeds`));
+    cachingCommands.push(cachingStore.hSet(`user:${follower}:newfeeds`, `${post._id}`, `${ownerId}`));
+    if ((await cachingStore.hLen(`user:${follower}:newfeeds`)) > 10000) {
+      cachingCommands.push(cachingStore.hDel(`user:${follower}:newfeeds`, `${post._id}`));
     }
+  });
+
+  await Promise.all(cachingCommands);
+}
+
+async function uncachePost(postId, ownerId) {
+  const cachingCommands = [];
+
+  cachingCommands.push(cachingStore.del(`post:${postId}`));
+  cachingCommands.push(cachingStore.hDel('newfeeds', `${postId}`));
+  const followers = await FollowModel.find({ followee: ownerId }, 'followers').lean();
+  _.forEach(followers, async follower => {
+    cachingCommands.push(cachingStore.hDel(`user:${follower}:newfeeds`, `${postId}`));
   });
 
   await Promise.all(cachingCommands);
@@ -41,4 +53,5 @@ async function cachePost(post, ownerId) {
 module.exports = {
   getCachedPostById,
   cachePost,
+  uncachePost,
 };

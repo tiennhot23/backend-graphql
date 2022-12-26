@@ -12,7 +12,7 @@ async function getCachedUserById(userId) {
     await cachingStore.set(`user:${userId}`, JSON.stringify(user));
     return user;
   }
-  return cachedUser;
+  return JSON.parse(cachedUser);
 }
 
 async function cacheUser(user) {

@@ -1,9 +1,13 @@
+const _ = require('lodash');
 const { GraphQLScalarType, Kind } = require('graphql');
 
 const dateTimeScalar = new GraphQLScalarType({
   name: 'DateTime',
   description: 'Date custom scalar type',
   serialize(value) { // convert outcoming result (date to int)
+    if (_.isString(value)) {
+      return (new Date(value)).getTime();
+    }
     return value.getTime();
   },
   parseValue(value) { // parse incoming input (int to date)

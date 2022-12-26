@@ -1,6 +1,6 @@
 type Query {
-  me: User @auth(requires: User)
-  user(input: UserFilterInput): User # Admin only
+  me: User @auth(requires: [User])
+  user(input: UserFilterInput): User @auth(requires: [Admin])
   users(name: String): [User]
 
   post(_id: ID!): Post

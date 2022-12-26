@@ -29,7 +29,7 @@ async function createContext({ req, res }) {
     if (!authUser || authUser.status !== 'Active') {
       throw new AuthenticationError('Cannot authorized');
     }
-    context.user = authUser;
+    context.authUser = authUser;
   }
   return context;
 }

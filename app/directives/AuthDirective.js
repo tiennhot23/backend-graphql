@@ -1,4 +1,5 @@
-const { SchemaDirectiveVisitor, AuthenticationError } = require('apollo-server-express');
+const _ = require('lodash');
+const { SchemaDirectiveVisitor, AuthenticationError, ForbiddenError } = require('apollo-server-express');
 const { defaultFieldResolver } = require('graphql');
 
 class AuthDirective extends SchemaDirectiveVisitor {
@@ -27,16 +28,20 @@ class AuthDirective extends SchemaDirectiveVisitor {
       const { resolve = defaultFieldResolver } = field;
       field.resolve = async (...args) => {
         // Get the required Role from the field, if null, get required role from the parent type
-        const requiredRole = field._requiredAuthRole
+        const requiredRoles = field._requiredAuthRole
           || objectType._requiredAuthRole;
 
-        if (!requiredRole) {
+        if (!requiredRoles) {
           return resolve.apply(this, args);
         }
 
-        const { user } = args[2];
-        if (!user || user.role !== requiredRole) {
+        const { authUser } = args[2];
+        if (!authUser) {
           throw new AuthenticationError('Cannot authorized');
+        }
+
+        if (!_.includes(requiredRoles, authUser.role)) {
+          throw new ForbiddenError('Have no permission');
         }
 
         return resolve.apply(this, args);

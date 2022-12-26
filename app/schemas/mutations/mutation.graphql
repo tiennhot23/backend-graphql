@@ -6,7 +6,7 @@ type Mutation {
   follow(followee: ID): GeneralResponse
   unfollow(followee: ID): GeneralResponse
 
-  createPost(title: String!, content: String!, status: String!): Post
+  createPost(title: String!, content: String!, status: PostStatus!): Post @auth(requires: [User, Admin])
   updatePost(input: UpdatePostInput!): Post
   deletePost(_id: ID): GeneralResponse
   hidePost(_id: ID): GeneralResponse
