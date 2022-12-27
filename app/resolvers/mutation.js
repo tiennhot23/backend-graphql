@@ -9,6 +9,7 @@ const resolvers = {
   hidePost: (parent, args, context, info) => context.dataSources.hidePost(args, context, info),
 
   clapPost: (parent, args, context, info) => context.dataSources.clapPost(args, context, info),
+  unclapPost: (parent, args, context, info) => context.dataSources.unclapPost(args, context, info),
 
 };
 

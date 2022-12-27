@@ -1,20 +1,7 @@
-const { PostModel, ClapModel } = require('../../models');
+const { PostModel } = require('../../models');
 const { GeneralResponse } = require('../../utils/responses');
 const { gqlSelectedField } = require('../../utils/helpers');
-const { getCachedPostById, cachePost, uncachePost } = require('../../utils/controllers');
-
-async function clapPost({ postId, count }, { authUser }, info) {
-  const post = await getCachedPostById(postId);
-
-  const projection = gqlSelectedField.selectTopFields(info);
-  await ClapModel.findOneAndUpdate(
-    { post: postId, user: authUser._id, postOwner: post.owner },
-    { $inc: { count } },
-    { new: true, projection, upsert: true },
-  ).lean();
-
-  return GeneralResponse();
-}
+const { cachePost, uncachePost } = require('../../utils/controllers');
 
 async function createPost({ title, content, status }, { authUser }) {
   const post = await PostModel.create({ owner: authUser._id, title, content, status });
@@ -87,4 +74,4 @@ async function hidePost({ _id }, { authUser }) {
   return new GeneralResponse(false, 'Invalid post');
 }
 
-module.exports = { createPost, clapPost, updatePost, deletePost, hidePost };
+module.exports = { createPost, updatePost, deletePost, hidePost };
