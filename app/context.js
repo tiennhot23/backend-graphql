@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
+const _ = require('lodash');
 const { parse } = require('graphql');
-const { AuthenticationError } = require('apollo-server-express');
+const { AuthenticationError, ForbiddenError } = require('apollo-server-express');
 const { getAccessToken, removeAccessToken, getCachedUserById } = require('./datasources/utils/controllers');
 
 async function createContext({ req, res }) {
@@ -8,10 +9,6 @@ async function createContext({ req, res }) {
     req,
     res,
   };
-  const { query } = req.body;
-  const ast = parse(`${query}`);
-  const fieldNodes = ast.definitions[0].selectionSet.selections; // === resolverInfo.fieldNodes
-
   const { uid, deviceId } = req.cookie;
   const authHeader = req.headers.authorization;
   const authToken = authHeader && authHeader.split(' ')[1];
@@ -31,6 +28,27 @@ async function createContext({ req, res }) {
     }
     context.authUser = authUser;
   }
+
+  const { query } = req.body;
+  const ast = parse(`${query}`);
+  const topFields = ast.definitions[0]
+    .selectionSet
+    .selections
+    .map(field => field.name.value);
+
+  const adminOnlyFields = ['user', 'disableUser'];
+  const authFields = ['me', 'user', 'disableUser', 'logout', 'follow', 'unfollow', 'createPost', 'updatePost', 'deletePost', 'hidePost', 'clapPost', 'unclapPost', 'comment', 'updateComment', 'reply', 'deleteComment'];
+
+  if (_.difference(topFields, authFields).length === topFields.length) {
+    // all fields in topFields is not in authFields
+  } else if (!context.authUser) { // no auth
+    throw new AuthenticationError('No auth');
+  } else if (_.difference(topFields, adminOnlyFields).length === topFields.length) {
+    // all fields is not in adminOnlyFields
+  } else if (context.authUser.role !== 'Admin') {
+    throw new ForbiddenError('Have no permission');
+  }
+
   return context;
 }
 

@@ -82,7 +82,7 @@ async function hidePost({ _id }, { authUser }) {
 
   if (post) {
     await uncachePost(_id, authUser._id);
-    return new GeneralResponse(true, 'Post deleted');
+    return new GeneralResponse(true, 'Post hided');
   }
   return new GeneralResponse(false, 'Invalid post');
 }
