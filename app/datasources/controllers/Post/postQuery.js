@@ -1,7 +1,6 @@
 const { PostModel, ClapModel } = require('../../models');
 const { gqlSelectedField } = require('../../utils/helpers');
 const { cachingStore } = require('../../utils/redis/stores');
-const { getCachedUserById } = require('../../utils/controllers');
 
 async function getPost({ _id }, context, info) {
   const projection = gqlSelectedField.selectTopFields(info);
@@ -36,9 +35,10 @@ async function getPostClapCount({ _id }, __, ___) {
   return cachedClapCount;
 }
 
-async function getPostOwner({ owner: ownerId }, __, ____) {
-  const owner = await getCachedUserById(ownerId);
-  return owner;
+async function getPostOwner({ owner: ownerId }, { loader }, ____) {
+  const { userLoader } = loader;
+
+  return userLoader.load(ownerId);
 }
 
 module.exports = { getPost, getPosts, getPostClapCount, getPostOwner };

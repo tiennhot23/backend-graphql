@@ -2,7 +2,8 @@ const { UserModel } = require('../../models');
 const { gqlSelectedField } = require('../../utils/helpers');
 
 async function getMe(args, { authUser }) {
-  return authUser;
+  const user = await UserModel.findById(authUser._id).lean();
+  return user;
 }
 
 async function getUser({ input }, __, info) {

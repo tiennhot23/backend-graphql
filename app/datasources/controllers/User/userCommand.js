@@ -7,6 +7,7 @@ const {
   cacheUser,
   saveAccessToken,
   removeAccessToken,
+  removeAllAccessToken,
 } = require('../../utils/controllers');
 const { hash: hashConfig } = require('../../../config');
 
@@ -48,4 +49,19 @@ async function logout(args, { req, res }) {
   return new GeneralResponse(true, 'Logged out');
 }
 
-module.exports = { login, createUser, logout };
+async function disableUser({ _id }) {
+  const user = await UserModel.findOneAndUpdate(
+    { _id },
+    { status: 'Deactivated' },
+    { new: true, projection: '_id status role' },
+  ).lean();
+
+  if (!user) throw new Error('Invalid user');
+
+  await cacheUser(user);
+  await removeAllAccessToken(_id);
+
+  return new GeneralResponse(true, 'Disabled user');
+}
+
+module.exports = { login, createUser, logout, disableUser };

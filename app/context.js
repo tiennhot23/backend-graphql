@@ -18,7 +18,7 @@ async function createContext({ req, res }) {
     if (!token || token !== authToken) {
       await removeAccessToken(uid, deviceId);
       res.clearCookie('uid');
-      res.clearCookie('deviceid');
+      res.clearCookie('deviceId');
       throw new AuthenticationError('[UNUSUAL REQUEST] Cannot authorized. Please login again');
     }
 
