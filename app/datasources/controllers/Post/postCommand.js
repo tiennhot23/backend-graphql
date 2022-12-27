@@ -53,11 +53,12 @@ async function deletePost({ _id }, { authUser }) {
     { projection: 'status' },
   ).lean();
 
-  if (post) {
-    await uncachePost(_id, authUser._id);
-    return new GeneralResponse(true, 'Post deleted');
+  if (!post) {
+    return new GeneralResponse(false, 'Invalid post');
   }
-  return new GeneralResponse(false, 'Invalid post');
+
+  await uncachePost(_id, authUser._id);
+  return new GeneralResponse(true, 'Post deleted');
 }
 
 async function hidePost({ _id }, { authUser }) {
@@ -68,10 +69,11 @@ async function hidePost({ _id }, { authUser }) {
   ).lean();
 
   if (post) {
-    await uncachePost(_id, authUser._id);
-    return new GeneralResponse(true, 'Post hided');
+    return new GeneralResponse(false, 'Invalid post');
   }
-  return new GeneralResponse(false, 'Invalid post');
+
+  await uncachePost(_id, authUser._id);
+  return new GeneralResponse(true, 'Post hided');
 }
 
 module.exports = { createPost, updatePost, deletePost, hidePost };
