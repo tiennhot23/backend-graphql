@@ -3,6 +3,8 @@ const resolvers = {
   login: (parent, args, context, info) => context.dataSources.login(args, context, info),
   logout: (parent, args, context, info) => context.dataSources.logout(args, context, info),
   disableUser: (parent, args, context, info) => context.dataSources.disableUser(args, context, info),
+  follow: (parent, args, context, info) => context.dataSources.followUser(args, context, info),
+  unfollow: (parent, args, context, info) => context.dataSources.unfollowUser(args, context, info),
 
   createPost: (parent, args, context, info) => context.dataSources.createPost(args, context, info),
   updatePost: (parent, args, context, info) => context.dataSources.updatePost(args, context, info),
