@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 const _ = require('lodash');
 const { UserModel } = require('../../models');
 const { authenticateStore, cachingStore } = require('../redis/stores');
@@ -19,28 +20,40 @@ async function cacheUser(user) {
   await cachingStore.set(`user:${user._id}`, JSON.stringify(_.pick(user, ['_id', 'status', 'role'])));
 }
 
-async function saveAccessToken(userId, deviceId, accessToken) {
-  await authenticateStore.hSet(`user:${userId}:tokens`, deviceId, accessToken);
+async function saveSession(userId, token, role) {
+  await authenticateStore.set(`${token}:${userId}`, role, { EX: 86400 });
 }
 
-async function removeAccessToken(userId, deviceId) {
-  await authenticateStore.hDel(`user:${userId}:tokens`, deviceId);
+async function removeSession(userId, token) {
+  await authenticateStore.del(`${token}:${userId}`);
 }
 
-async function getAccessToken(userId, deviceId) {
-  const accessToken = await authenticateStore.hGet(`user:${userId}:tokens`, deviceId);
-  return accessToken;
+async function getSession(userId, token) {
+  const role = await authenticateStore.get(`${token}:${userId}`);
+  return role;
 }
 
-async function removeAllAccessToken(userId) {
-  await authenticateStore.del(`user:${userId}:tokens`);
+async function removeAllSession(userId) {
+  const keys = await keyScan(`*:${userId}`);
+  await authenticateStore.del(keys);
+}
+
+async function keyScan(pattern, count = 20) {
+  const result = [];
+  let cursor = 0;
+  do {
+    const [curs, keys] = await authenticateStore.scan(cursor, 'MATCH', pattern, 'COUNT', count);
+    cursor = curs;
+    result.push(...keys);
+  } while (cursor !== '0');
+  return result;
 }
 
 module.exports = {
   getCachedUserById,
   cacheUser,
-  saveAccessToken,
-  removeAccessToken,
-  getAccessToken,
-  removeAllAccessToken,
+  saveSession,
+  removeSession,
+  getSession,
+  removeAllSession,
 };
