@@ -3,6 +3,9 @@ const resolvers = {
   user: (parent, args, context, info) => context.dataSources.getUser(args, context, info),
   users: (parent, args, context, info) => context.dataSources.getUsers(args, context, info),
 
+  post: (parent, args, context, info) => context.dataSources.getPost(args, context, info),
+  posts: (parent, args, context, info) => context.dataSources.getPosts(args, context, info),
+
 };
 
 module.exports = resolvers;

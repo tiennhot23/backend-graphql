@@ -50,8 +50,27 @@ async function uncachePost(postId, ownerId) {
   await Promise.all(cachingCommands);
 }
 
+async function filterOwnerPosts(ownerId, { title, limit, offset }, projection) {
+  const posts = await PostModel.find({
+    owner: ownerId,
+    title: new RegExp(title, 'i'),
+  }, projection)
+    .skip(offset).limit(limit).lean();
+  return posts;
+}
+
+async function filterPosts({ title = '', limit = 10, offset = 0 }, projection) {
+  const posts = await PostModel.find({
+    title: new RegExp(title, 'i'),
+  }, projection)
+    .skip(offset).limit(limit).lean();
+  return posts;
+}
+
 module.exports = {
   getCachedPostById,
   cachePost,
   uncachePost,
+  filterOwnerPosts,
+  filterPosts,
 };

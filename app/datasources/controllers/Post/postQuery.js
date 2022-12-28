@@ -1,6 +1,12 @@
-const { PostModel, ClapModel } = require('../../models');
+const { PostModel } = require('../../models');
+const {
+  filterOwnerPosts,
+  filterPosts,
+  getCachedClapCount,
+  cacheClapCount,
+  calculateClapCount,
+} = require('../../utils/controllers');
 const { gqlSelectedField } = require('../../utils/helpers');
-const { cachingStore } = require('../../utils/redis/stores');
 
 async function getPost({ _id }, context, info) {
   const projection = gqlSelectedField.selectTopFields(info);
@@ -10,33 +16,27 @@ async function getPost({ _id }, context, info) {
 }
 
 async function getPosts({ input }, context, info) {
-  const { title, limit, offset } = input;
+  const { owner, title, limit, offset } = input;
   const projection = gqlSelectedField.selectTopFields(info);
-  const posts = await PostModel.find({ title: new RegExp(title, 'i') }, projection)
-    .skip(offset).limit(limit).lean();
-
+  const posts = owner ? await filterOwnerPosts(owner, { title, limit, offset }, projection)
+    : await filterPosts({ title, limit, offset }, projection);
   return posts;
 }
 
-async function getPostClapCount({ _id }, __, ___) {
-  const cachedClapCount = await cachingStore.get(`post:${_id}:clapCount`);
+async function getPostClapCount({ _id }) {
+  const cachedClapCount = await getCachedClapCount('post', _id);
   if (!cachedClapCount || cachedClapCount < 1000) {
-    const { clapCount } = await ClapModel.aggregate([
-      { $match: { post: _id } },
-      { $group: { _id: null, clapCount: { $sum: '$count' } } },
-      { $project: { _id: 0, clapCount: 1 } },
-    ]);
+    const clapCount = await calculateClapCount('post', _id);
 
-    await cachingStore.set(`post:${_id}:clapCount`, clapCount, { EX: 3600 });
-    if (clapCount > 1000) await cachingStore.zAdd('post:topClapCount', clapCount, _id);
+    await cacheClapCount('post', _id, clapCount);
 
     return clapCount;
   }
   return cachedClapCount;
 }
 
-async function getPostOwner({ owner: ownerId }, { loader }, ____) {
-  const { userLoader } = loader;
+async function getPostOwner({ owner: ownerId }, __, { dataSources }, ____) {
+  const { userLoader } = dataSources.loaders;
 
   return userLoader.load(ownerId);
 }

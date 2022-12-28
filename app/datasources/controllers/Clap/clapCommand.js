@@ -7,9 +7,15 @@ async function clapPost({ postId, count = 1 }, { authUser }) {
 
   const clap = await ClapModel.findOneAndUpdate(
     { post: postId, user: authUser._id, postOwner: post.owner },
-    { $inc: { count: (count < 0 ? Math.min('$count' || 0, count) : count) } },
+    { $inc: { count } },
     { new: true, projection: 'count', upsert: true },
   ).lean();
+
+  if (clap.count === 0) {
+    await ClapModel.findOneAndDelete(
+      { post: postId, user: authUser._id, postOwner: post.owner },
+    ).lean();
+  }
 
   if (!clap) {
     return new GeneralResponse(false, 'Cannot clap');
@@ -33,9 +39,15 @@ async function unclapPost({ postId }, { authUser }) {
 async function clapComment({ commentId, count = 1 }, { authUser }) {
   const clap = await ClapModel.findOneAndUpdate(
     { comment: commentId, user: authUser._id },
-    { $inc: { count: (count < 0 ? Math.min('$count' || 0, count) : count) } },
+    { $inc: { count } },
     { new: true, projection: 'count', upsert: true },
   ).lean();
+
+  if (clap.count === 0) {
+    await ClapModel.findOneAndDelete(
+      { comment: commentId, user: authUser._id },
+    ).lean();
+  }
 
   if (!clap) {
     return new GeneralResponse(false, 'Cannot clap');
