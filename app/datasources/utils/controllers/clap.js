@@ -39,7 +39,7 @@ async function calculateClapCount(type, _id) {
         { $group: { _id: null, clapCount: { $sum: '$count' } } },
         { $project: { _id: 0, clapCount: 1 } },
       ]);
-      clapCount = result[0].clapCount;
+      clapCount = result[0] ? result[0].clapCount : 0;
       break;
     }
     case 'comment': {
@@ -48,7 +48,7 @@ async function calculateClapCount(type, _id) {
         { $group: { _id: null, clapCount: { $sum: '$count' } } },
         { $project: { _id: 0, clapCount: 1 } },
       ]);
-      clapCount = result[0].clapCount;
+      clapCount = result[0] ? result[0].clapCount : 0;
       break;
     }
     default:

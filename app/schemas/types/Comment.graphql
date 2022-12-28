@@ -2,7 +2,7 @@ type Comment {
   _id: ID
   title: String
   content: String
-  User: User
+  user: User
   post: Post
 
   createdAt: DateTime

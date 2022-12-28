@@ -6,5 +6,6 @@ type Query {
   post(_id: ID!): Post
   posts(input: PostFilterInput!): [Post]
 
+  comments(input: CommentFilterInput!): [Comment]
   replies(input: ReplyFilterInput!): [Comment]
 }

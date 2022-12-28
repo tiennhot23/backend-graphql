@@ -6,6 +6,9 @@ const resolvers = {
   post: (parent, args, context, info) => context.dataSources.getPost(args, context, info),
   posts: (parent, args, context, info) => context.dataSources.getPosts(args, context, info),
 
+  comments: (parent, args, context, info) => context.dataSources.getPostComments(args, context, info),
+  replies: (parent, args, context, info) => context.dataSources.getCommentReplies(args, context, info),
+
 };
 
 module.exports = resolvers;

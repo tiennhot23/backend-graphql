@@ -1,4 +1,4 @@
-const { UserModel } = require('../../models');
+const { UserModel, FollowModel } = require('../../models');
 const { gqlSelectedField } = require('../../utils/helpers');
 
 async function getMe(args, { authUser }) {
@@ -26,4 +26,15 @@ async function getUsers({ name = '' }, context, info) {
   return users;
 }
 
-module.exports = { getMe, getUser, getUsers };
+async function getFollowerCount({ _id }) {
+  const result = await FollowModel.aggregate([
+    { $match: { followee: _id } },
+    { $count: 'followerCount' },
+    { $project: { _id: 0, followerCount: 1 } },
+  ]);
+  const followerCount = result[0] ? result[0].followerCount : 0;
+
+  return followerCount;
+}
+
+module.exports = { getMe, getUser, getUsers, getFollowerCount };

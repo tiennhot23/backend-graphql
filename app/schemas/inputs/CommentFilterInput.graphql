@@ -1,0 +1,6 @@
+input CommentFilterInput {
+  postId: ID
+
+  limit: Int
+  offset: Int
+}
