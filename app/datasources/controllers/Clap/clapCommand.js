@@ -1,5 +1,4 @@
 const { ClapModel, PostModel } = require('../../models');
-const { getCachedPostById } = require('../../utils/controllers');
 
 async function clapPost(args, context, info) {
   try {
@@ -48,9 +47,8 @@ async function unclapPost(args, context, info) {
     const { signature } = context;
     const { _id: userId } = signature;
 
-    const post = await getCachedPostById(postId);
     const result = await ClapModel.deleteOne(
-      { post: postId, user: userId, postOwner: post.owner },
+      { post: postId, user: userId },
     );
 
     if (result.deletedCount === 0) {

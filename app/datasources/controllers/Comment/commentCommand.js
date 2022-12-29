@@ -1,6 +1,5 @@
-const { CommentModel } = require('../../models');
+const { CommentModel, PostModel } = require('../../models');
 const { gqlSelectedField } = require('../../utils/helpers');
-const { getCachedPostById } = require('../../utils/controllers');
 
 async function createComment(args, context, info) {
   try {
@@ -9,7 +8,7 @@ async function createComment(args, context, info) {
     const { postId, title, content } = input;
     const { _id: userId } = signature;
 
-    const post = await getCachedPostById(postId);
+    const post = await PostModel.exists({ _id: postId, status: 'Visible' });
     if (!post) throw new Error('Invalid post');
     const comment = await CommentModel.create({
       post: postId,

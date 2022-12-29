@@ -1,9 +1,8 @@
-/* eslint-disable no-unused-vars */
 const _ = require('lodash');
 const { parse } = require('graphql');
 const { AuthenticationError, ForbiddenError } = require('apollo-server-express');
-const { getSession, removeSession, getCachedUserById } = require('./datasources/utils/controllers');
-const { createLoader } = require('./loaders');
+const { getSession } = require('./datasources/utils/controllers');
+const { createLoader } = require('./utils/loaders');
 
 async function createContext({ req }) {
   const context = {};

@@ -5,7 +5,7 @@ const {
   batchFollowCountOfUser,
   batchClapCountOfPost,
   batchClapCountOfComment,
-} = require('./datasources/loaders');
+} = require('../datasources/loaders');
 
 function createLoader() {
   return {

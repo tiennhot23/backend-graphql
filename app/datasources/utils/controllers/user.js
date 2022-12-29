@@ -2,6 +2,7 @@
 const _ = require('lodash');
 const { UserModel } = require('../../models');
 const { authenticateStore, cachingStore } = require('../redis/stores');
+const { redisHelper } = require('../helpers');
 
 async function getCachedUserById(userId) {
   const cachedUser = await cachingStore.get(`user:${userId}`);
@@ -34,19 +35,8 @@ async function getSession(token) {
 }
 
 async function removeAllSession(userId) {
-  const keys = await keyScan(`*:${userId}`);
+  const keys = await redisHelper.keyScan(authenticateStore, `*:${userId}`);
   await authenticateStore.del(keys);
-}
-
-async function keyScan(pattern, count = 20) {
-  const result = [];
-  let cursor = 0;
-  do {
-    const [curs, keys] = await authenticateStore.scan(cursor, 'MATCH', pattern, 'COUNT', count);
-    cursor = curs;
-    result.push(...keys);
-  } while (cursor !== '0');
-  return result;
 }
 
 module.exports = {

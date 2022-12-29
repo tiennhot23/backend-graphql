@@ -2,6 +2,7 @@ const { PostModel } = require('../../models');
 const {
   getCachedClapCount,
   cacheClapCount,
+  getCommonNewsFeed,
 } = require('../../utils/controllers');
 const { gqlSelectedField } = require('../../utils/helpers');
 
@@ -37,6 +38,21 @@ async function getPosts(args, context, info) {
     };
     if (owner) filter.owner = owner;
     const posts = await PostModel.find(filter, projection).skip(offset).limit(limit).lean();
+    return posts;
+  } catch (error) {
+    logger.error('get posts error', { error: error.stack });
+    throw error;
+  }
+}
+
+async function getNewsFeed(args, context, info) {
+  try {
+    const projection = gqlSelectedField.selectTopFields(info);
+    const newsFeed = await getCommonNewsFeed();
+    const posts = await PostModel.find(
+      { _id: { $in: newsFeed } },
+      projection,
+    ).lean();
     return posts;
   } catch (error) {
     logger.error('get posts error', { error: error.stack });

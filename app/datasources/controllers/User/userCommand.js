@@ -6,7 +6,6 @@ const {
   saveSession,
   removeSession,
   removeAllSession,
-  getCachedUserById,
 } = require('../../utils/controllers');
 const { hash: hashConfig } = require('../../../config');
 
@@ -95,7 +94,8 @@ async function followUser(args, context, info) {
     const { followee: followeeId } = args;
     const { signature } = context;
     const { _id } = signature;
-    const followee = await getCachedUserById(followeeId);
+
+    const followee = await UserModel.exists({ _id: followeeId });
     if (!followee) {
       return {
         isSuccess: false,
