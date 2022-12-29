@@ -35,12 +35,12 @@ class AuthDirective extends SchemaDirectiveVisitor {
           return resolve.apply(this, args);
         }
 
-        const { authUser } = args[2];
-        if (!authUser) {
+        const { signature } = args[2];
+        if (!signature) {
           throw new AuthenticationError('Cannot authorized');
         }
 
-        if (!_.includes(requiredRoles, authUser.role)) {
+        if (!_.includes(requiredRoles, signature.role)) {
           throw new ForbiddenError('Have no permission');
         }
 

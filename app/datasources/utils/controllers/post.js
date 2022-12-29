@@ -15,20 +15,20 @@ async function getCachedPostById(postId) {
   return cachedPost;
 }
 
-async function cachePost(post, ownerId) {
+async function cachePost(post) {
   const cachingCommands = [];
 
   cachingCommands.push(cachingStore.set(`post:${post._id}`, JSON.stringify(_.pick(post, ['_id', 'title', 'owner']))));
-  cachingCommands.push(cachingStore.hSet('newfeeds', `${post._id}`, `${ownerId}`));
+  cachingCommands.push(cachingStore.hSet('newfeeds', `${post._id}`, Date.now()));
   if ((await cachingStore.hLen('newfeeds')) > 10000) {
     cachingCommands.push(cachingStore.hDel('newfeeds', `${post._id}`));
   }
   // TODO - can followers be fetched from cached ?
   // NOTE: maybe duplicate post when the follower's newfeed is too short,
   // so global newfeed must be added to generate follower's newfeed
-  const followers = await FollowModel.find({ followee: ownerId }, 'followers').lean();
+  const followers = await FollowModel.find({ followee: post.owner }, 'followers').lean();
   _.forEach(followers, async follower => {
-    cachingCommands.push(cachingStore.hSet(`user:${follower}:newfeeds`, `${post._id}`, `${ownerId}`));
+    cachingCommands.push(cachingStore.hSet(`user:${follower}:newfeeds`, `${post._id}`, Date.now()));
     if ((await cachingStore.hLen(`user:${follower}:newfeeds`)) > 10000) {
       cachingCommands.push(cachingStore.hDel(`user:${follower}:newfeeds`, `${post._id}`));
     }
@@ -50,27 +50,8 @@ async function uncachePost(postId, ownerId) {
   await Promise.all(cachingCommands);
 }
 
-async function filterOwnerPosts(ownerId, { title, limit, offset }, projection) {
-  const posts = await PostModel.find({
-    owner: ownerId,
-    title: new RegExp(title, 'i'),
-  }, projection)
-    .skip(offset).limit(limit).lean();
-  return posts;
-}
-
-async function filterPosts({ title = '', limit = 10, offset = 0 }, projection) {
-  const posts = await PostModel.find({
-    title: new RegExp(title, 'i'),
-  }, projection)
-    .skip(offset).limit(limit).lean();
-  return posts;
-}
-
 module.exports = {
   getCachedPostById,
   cachePost,
   uncachePost,
-  filterOwnerPosts,
-  filterPosts,
 };

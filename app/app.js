@@ -6,10 +6,8 @@ const resolvers = require('./resolvers');
 const datasources = require('./datasources');
 const createContext = require('./context');
 const directives = require('./directives');
-const parseCookie = require('./utils/cookieParser');
 
 const app = express();
-app.use(parseCookie);
 
 const server = new ApolloServer({
   schema: makeExecutableSchema({

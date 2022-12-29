@@ -2,89 +2,151 @@ const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 
 const { UserModel, FollowModel } = require('../../models');
-const { LoginResponse, GeneralResponse } = require('../../utils/responses');
 const {
   saveSession,
-  removeSessionsaveSession,
-  removeAllSessionsaveSession,
+  removeSession,
+  removeAllSession,
   getCachedUserById,
 } = require('../../utils/controllers');
 const { hash: hashConfig } = require('../../../config');
 
-async function login({ username, password }) {
-  const user = await UserModel.findOne({ username }, 'password role status').lean();
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    throw new Error('Username or password not match');
+async function login(args, context, info) {
+  try {
+    const { username, password } = args;
+    const user = await UserModel.findOne({ username }, 'password role status').lean();
+    if (!user
+        || !(await bcrypt.compare(password, user.password))
+        || user.status !== 'Active') {
+      return {
+        isSuccess: false,
+        message: 'Invalid credentals',
+      };
+    }
+
+    const token = `${uuidv4()}:${user._id}`;
+    await saveSession(token, user.role);
+
+    return {
+      isSuccess: true,
+      message: 'Login success',
+      token,
+    };
+  } catch (error) {
+    logger.error('login error', { error: error.stack });
+    throw error;
   }
-
-  if (user.status !== 'Active') {
-    throw new Error(' User disabled');
-  }
-
-  const accessToken = `${uuidv4()}:${user._id}`;
-
-  await saveSession(user._id, accessToken, user.role);
-
-  return new LoginResponse(true, 'Logged in', accessToken);
 }
 
-async function createUser({ email, username, password }) {
-  if (await UserModel.exists({ $or: [{ email }, { username }] })) {
-    throw new Error('Email or username is already used');
-  }
-  const hashPassword = await bcrypt.hash(password, hashConfig.saltRound);
-  const user = await UserModel.create({ email, username, password: hashPassword });
+async function createUser(args, context, info) {
+  try {
+    const { email, username, password } = args;
+    if (await UserModel.exists({ $or: [{ email }, { username }] })) {
+      throw new Error('Email or username is already used');
+    }
+    const hashPassword = await bcrypt.hash(password, hashConfig.saltRound);
+    const user = await UserModel.create({ email, username, password: hashPassword });
 
-  return user;
+    return user;
+  } catch (error) {
+    logger.error('create user error', { error: error.stack });
+    throw error;
+  }
 }
 
-async function logout(args, { req }) {
-  const { userId, token } = req.auth;
-  await removeSessionsaveSession(userId, token);
+async function logout(args, context, info) {
+  try {
+    const { signature } = context;
+    const { token } = signature;
+    await removeSession(token);
 
-  return new GeneralResponse(true, 'Logged out');
+    return {
+      isSuccess: true,
+      message: 'Logout success',
+    };
+  } catch (error) {
+    logger.error('logout error', { error: error.stack });
+    throw error;
+  }
 }
 
-async function disableUser({ _id }) {
-  const user = await UserModel.findOneAndUpdate(
-    { _id },
-    { status: 'Deactivated' },
-    { new: true, projection: '_id status role' },
-  ).lean();
+async function disableUser(args, context, info) {
+  try {
+    const { _id } = args;
+    const result = await UserModel.updateOne(
+      { _id },
+      { status: 'Deactivated' },
+    );
+    if (result.modifiedCount === 0) throw new Error('Invalid user');
 
-  if (!user) throw new Error('Invalid user');
+    await removeAllSession(_id);
 
-  await removeAllSessionsaveSession(_id);
-
-  return new GeneralResponse(true, 'Disabled user');
+    return {
+      isSuccess: true,
+      message: 'User has been disabled',
+    };
+  } catch (error) {
+    logger.error('disable user error', { error: error.stack });
+    throw error;
+  }
 }
 
-async function followUser({ followee: followeeId }, { authUser }) {
-  const followee = await getCachedUserById(followeeId);
-  if (!followee) {
-    throw new Error('Invalid user');
-  }
-  const result = await FollowModel.updateOne(
-    { followee: followeeId, follower: authUser._id },
-    { followee: followeeId, follower: authUser._id },
-    { upsert: true },
-  );
+async function followUser(args, context, info) {
+  try {
+    const { followee: followeeId } = args;
+    const { signature } = context;
+    const { _id } = signature;
+    const followee = await getCachedUserById(followeeId);
+    if (!followee) {
+      return {
+        isSuccess: false,
+        message: 'Invalid user',
+      };
+    }
+    const result = await FollowModel.updateOne(
+      { followee: followeeId, follower: _id },
+      { followee: followeeId, follower: _id },
+      { upsert: true },
+    );
 
-  if (result.matchedCount === 1) {
-    return new GeneralResponse(false, 'User had been followed');
+    if (result.matchedCount === 1) {
+      return {
+        isSuccess: false,
+        message: 'User had been followed',
+      };
+    }
+    return {
+      isSuccess: true,
+      message: 'Follow user successful',
+    };
+  } catch (error) {
+    logger.error('follow user error', { error: error.stack });
+    throw error;
   }
-  return new GeneralResponse(true, 'Follow user successful');
 }
 
-async function unfollowUser({ followee: followeeId }, { authUser }) {
-  const result = await FollowModel.deleteOne(
-    { followee: followeeId, follower: authUser._id },
-  );
+async function unfollowUser(args, context, info) {
+  try {
+    const { followee: followeeId } = args;
+    const { signature } = context;
+    const { _id } = signature;
+    const result = await FollowModel.deleteOne(
+      { followee: followeeId, follower: _id },
+    );
 
-  if (result.deletedCount === 0) {
-    return new GeneralResponse(false, 'User hadn\'t been followed');
+    if (result.deletedCount === 0) {
+      return {
+        isSuccess: false,
+        message: 'User hadn\'t been followed',
+      };
+    }
+    return {
+      isSuccess: true,
+      message: 'Unfollow user successful',
+    };
+  } catch (error) {
+    logger.error('unfollow user error', { error: error.stack });
+    throw error;
   }
-  return new GeneralResponse(true, 'Unfollow user successful');
 }
 
 module.exports = { login, createUser, logout, disableUser, followUser, unfollowUser };

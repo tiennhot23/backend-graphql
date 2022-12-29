@@ -1,5 +1,6 @@
 const resolvers = {
-  user: (parent, args, context, info) => context.dataSources.getCommentUser(parent, args, context, info),
+  user: (parent, args, context, info) => context.dataSources.getUserOfComment(parent, args, context, info),
+  post: (parent, args, context, info) => context.dataSources.getPostOfComment(parent, args, context, info),
 
 };
 

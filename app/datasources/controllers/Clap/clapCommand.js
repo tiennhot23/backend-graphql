@@ -1,69 +1,126 @@
 const { ClapModel } = require('../../models');
-const { GeneralResponse } = require('../../utils/responses');
 const { getCachedPostById } = require('../../utils/controllers');
 
-async function clapPost({ postId, count = 1 }, { authUser }) {
-  const post = await getCachedPostById(postId);
+async function clapPost(args, context, info) {
+  try {
+    const { postId, count = 1 } = args;
+    const { signature } = context;
+    const { _id: userId } = signature;
 
-  const clap = await ClapModel.findOneAndUpdate(
-    { post: postId, user: authUser._id, postOwner: post.owner },
-    { $inc: { count } },
-    { new: true, projection: 'count', upsert: true },
-  ).lean();
-
-  if (clap.count === 0) {
-    await ClapModel.findOneAndDelete(
-      { post: postId, user: authUser._id, postOwner: post.owner },
+    if (count <= 0) {
+      return {
+        isSuccess: false,
+        message: 'Clap failed',
+      };
+    }
+    const post = await getCachedPostById(postId);
+    const clap = await ClapModel.findOneAndUpdate(
+      { post: postId, user: userId, postOwner: post.owner },
+      { $inc: { count } },
+      { new: true, projection: 'count', upsert: true },
     ).lean();
-  }
 
-  if (!clap) {
-    return new GeneralResponse(false, 'Cannot clap');
+    if (!clap) {
+      return {
+        isSuccess: false,
+        message: 'Clap failed',
+      };
+    }
+    return {
+      isSuccess: true,
+      message: 'Clapped',
+    };
+  } catch (error) {
+    logger.error('clap post error', { error: error.stack });
+    throw error;
   }
-  return new GeneralResponse(true, 'Clapped');
 }
 
-async function unclapPost({ postId }, { authUser }) {
-  const post = await getCachedPostById(postId);
+async function unclapPost(args, context, info) {
+  try {
+    const { postId } = args;
+    const { signature } = context;
+    const { _id: userId } = signature;
 
-  const clap = await ClapModel.findOneAndDelete(
-    { post: postId, user: authUser._id, postOwner: post.owner },
-  ).lean();
+    const post = await getCachedPostById(postId);
+    const result = await ClapModel.deleteOne(
+      { post: postId, user: userId, postOwner: post.owner },
+    );
 
-  if (!clap) {
-    return new GeneralResponse(false, 'Cannot unclap');
+    if (result.deletedCount === 0) {
+      return {
+        isSuccess: false,
+        message: 'Unclap failed',
+      };
+    }
+    return {
+      isSuccess: true,
+      message: 'Unclapped',
+    };
+  } catch (error) {
+    logger.error('unclap post error', { error: error.stack });
+    throw error;
   }
-  return new GeneralResponse(true, 'Unclapped');
 }
 
-async function clapComment({ commentId, count = 1 }, { authUser }) {
-  const clap = await ClapModel.findOneAndUpdate(
-    { comment: commentId, user: authUser._id },
-    { $inc: { count } },
-    { new: true, projection: 'count', upsert: true },
-  ).lean();
+async function clapComment(args, context, info) {
+  try {
+    const { commentId, count = 1 } = args;
+    const { signature } = context;
+    const { _id: userId } = signature;
 
-  if (clap.count === 0) {
-    await ClapModel.findOneAndDelete(
-      { comment: commentId, user: authUser._id },
+    if (count <= 0) {
+      return {
+        isSuccess: false,
+        message: 'Clap failed',
+      };
+    }
+    const clap = await ClapModel.findOneAndUpdate(
+      { comment: commentId, user: userId },
+      { $inc: { count } },
+      { new: true, projection: 'count', upsert: true },
     ).lean();
-  }
 
-  if (!clap) {
-    return new GeneralResponse(false, 'Cannot clap');
+    if (!clap) {
+      return {
+        isSuccess: false,
+        message: 'Clap failed',
+      };
+    }
+    return {
+      isSuccess: true,
+      message: 'Clapped',
+    };
+  } catch (error) {
+    logger.error('clap comment error', { error: error.stack });
+    throw error;
   }
-  return new GeneralResponse(true, 'Clapped');
 }
 
-async function unclapComment({ commentId }, { authUser }) {
-  const clap = await ClapModel.findOneAndDelete(
-    { comment: commentId, user: authUser._id },
-  ).lean();
+async function unclapComment(args, context, info) {
+  try {
+    const { commentId } = args;
+    const { signature } = context;
+    const { _id: userId } = signature;
 
-  if (!clap) {
-    return new GeneralResponse(false, 'Cannot unclap');
+    const result = await ClapModel.deleteOne(
+      { comment: commentId, user: userId },
+    );
+
+    if (result.deletedCount === 0) {
+      return {
+        isSuccess: false,
+        message: 'Unclap failed',
+      };
+    }
+    return {
+      isSuccess: true,
+      message: 'Unclapped',
+    };
+  } catch (error) {
+    logger.error('unclap post error', { error: error.stack });
+    throw error;
   }
-  return new GeneralResponse(true, 'Unclapped');
 }
 
 module.exports = { clapPost, unclapPost, clapComment, unclapComment };

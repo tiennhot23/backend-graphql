@@ -20,16 +20,16 @@ async function cacheUser(user) {
   await cachingStore.set(`user:${user._id}`, JSON.stringify(_.pick(user, ['_id', 'status', 'role'])));
 }
 
-async function saveSession(userId, token, role) {
-  await authenticateStore.set(`${token}:${userId}`, role, { EX: 86400 });
+async function saveSession(token, role) {
+  await authenticateStore.set(token, role, { EX: 86400 });
 }
 
-async function removeSession(userId, token) {
-  await authenticateStore.del(`${token}:${userId}`);
+async function removeSession(token) {
+  await authenticateStore.del(token);
 }
 
-async function getSession(userId, token) {
-  const role = await authenticateStore.get(`${token}:${userId}`);
+async function getSession(token) {
+  const role = await authenticateStore.get(token);
   return role;
 }
 
