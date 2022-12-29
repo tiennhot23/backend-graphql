@@ -3,29 +3,25 @@ const _ = require('lodash');
 const { parse } = require('graphql');
 const { AuthenticationError, ForbiddenError } = require('apollo-server-express');
 const { getSession, removeSession, getCachedUserById } = require('./datasources/utils/controllers');
-
-async function createContext({ req, res }) {
-  const authHeader = req.headers.authorization;
-  if (authHeader) {
-    const token = authHeader.split(':')[0];
-    const userId = authHeader.split(':')[0];
-    const role = await getSession(userId, token);
+const { createLoader } = require('./loaders');
+/* TODO -
+  trycach trong conntroller
+  map args trong controller
+  han che throw error voi nhung error da handle dc
+  name of batch function: batch cai gi cua cai gi
+  trycactch trong loader
+  dung toString khi truyen id vao batchingFn
+*/
+async function createContext({ req }) {
+  const context = {};
+  const token = req.headers.authorization;
+  if (token) {
+    const userId = token.split(':')[1];
+    const role = await getSession(token);
 
     if (!role) {
       throw new AuthenticationError('Cannot authorized. Please login again');
     }
-
-    req.auth = {
-      role,
-      token,
-      userId,
-    };
-
-    // const authUser = await getCachedUserById(userId);
-    // if (!authUser || authUser.status !== 'Active') {
-    //   throw new AuthenticationError('Cannot authorized');
-    // }
-    // context.authUser = authUser;
 
     const { query } = req.body;
     const ast = parse(`${query}`);
@@ -39,19 +35,22 @@ async function createContext({ req, res }) {
 
     if (_.difference(topFields, authFields).length === topFields.length) {
       // all fields in topFields is not in authFields
-    // } else if (!context.authUser) { // no auth
-    //   throw new AuthenticationError('No auth');
     } else if (_.difference(topFields, adminOnlyFields).length === topFields.length) {
       // all fields is not in adminOnlyFields
     } else if (role !== 'Admin') {
-      throw new ForbiddenError('Have no permission');
+      throw new ForbiddenError('No permission');
     }
+
+    context.signature = {
+      _id: userId,
+      role,
+      token,
+    };
   }
 
-  return {
-    req,
-    res,
-  };
+  context.loaders = createLoader();
+
+  return context;
 }
 
 module.exports = createContext;
