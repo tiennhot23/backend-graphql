@@ -1,10 +1,19 @@
 const DataLoader = require('dataloader');
-const { batchUsers, batchPosts } = require('./datasources/loaders');
+const {
+  batchUsers,
+  batchPosts,
+  batchFollowCountOfUser,
+  batchClapCountOfPost,
+  batchClapCountOfComment,
+} = require('./datasources/loaders');
 
 function createLoader() {
   return {
-    userLoader: new DataLoader(keys => batchUsers(keys)),
-    postLoader: new DataLoader(keys => batchPosts(keys)),
+    userLoader: new DataLoader(batchUsers),
+    followCountLoader: new DataLoader(batchFollowCountOfUser),
+    postLoader: new DataLoader(batchPosts),
+    postClapCountLoader: new DataLoader(batchClapCountOfPost),
+    commentClapCountLoader: new DataLoader(batchClapCountOfComment),
   };
 }
 

@@ -1,4 +1,4 @@
-const { ClapModel } = require('../../models');
+const { ClapModel, PostModel } = require('../../models');
 const { getCachedPostById } = require('../../utils/controllers');
 
 async function clapPost(args, context, info) {
@@ -13,7 +13,13 @@ async function clapPost(args, context, info) {
         message: 'Clap failed',
       };
     }
-    const post = await getCachedPostById(postId);
+    const post = await PostModel.findById(postId, 'owner status').lean();
+    if (!post || post.status !== 'Visible') {
+      return {
+        isSuccess: false,
+        message: 'Invalid post',
+      };
+    }
     const clap = await ClapModel.findOneAndUpdate(
       { post: postId, user: userId, postOwner: post.owner },
       { $inc: { count } },

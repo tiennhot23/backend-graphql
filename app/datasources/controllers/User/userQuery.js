@@ -1,4 +1,4 @@
-const { UserModel, FollowModel } = require('../../models');
+const { UserModel } = require('../../models');
 const { gqlSelectedField } = require('../../utils/helpers');
 
 async function getMe(args, context, info) {
@@ -50,18 +50,13 @@ async function getUsers(args, context, info) {
   }
 }
 
-async function getFollowerCount(args) {
+async function getFollowerCount(parent, args, context, info) {
   try {
-    const { _id: userId } = args;
+    const { _id: userId } = parent;
+    const { loaders } = context;
+    const { followCountLoader } = loaders;
 
-    const result = await FollowModel.aggregate([
-      { $match: { followee: userId } },
-      { $count: 'followerCount' },
-      { $project: { _id: 0, followerCount: 1 } },
-    ]);
-    const followerCount = result[0] ? result[0].followerCount : 0;
-
-    return followerCount;
+    return followCountLoader.load(userId.toString());
   } catch (error) {
     logger.error('get follower count error', { error: error.stack });
     throw error;

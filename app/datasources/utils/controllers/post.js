@@ -26,11 +26,11 @@ async function cachePost(post) {
   // TODO - can followers be fetched from cached ?
   // NOTE: maybe duplicate post when the follower's newfeed is too short,
   // so global newfeed must be added to generate follower's newfeed
-  const followers = await FollowModel.find({ followee: post.owner }, 'followers').lean();
-  _.forEach(followers, async follower => {
-    cachingCommands.push(cachingStore.hSet(`user:${follower}:newfeeds`, `${post._id}`, Date.now()));
-    if ((await cachingStore.hLen(`user:${follower}:newfeeds`)) > 10000) {
-      cachingCommands.push(cachingStore.hDel(`user:${follower}:newfeeds`, `${post._id}`));
+  const follows = await FollowModel.find({ followee: post.owner }, 'follower').lean();
+  _.forEach(follows, async follow => {
+    cachingCommands.push(cachingStore.hSet(`user:${follow.follower}:newfeeds`, `${post._id}`, Date.now()));
+    if ((await cachingStore.hLen(`user:${follow.follower}:newfeeds`)) > 10000) {
+      cachingCommands.push(cachingStore.hDel(`user:${follow.follower}:newfeeds`, `${post._id}`));
     }
   });
 

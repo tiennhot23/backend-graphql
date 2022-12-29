@@ -7,4 +7,6 @@ type Comment {
 
   createdAt: DateTime
   updatedAt: DateTime
+
+  clapCount: Int
 }

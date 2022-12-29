@@ -21,7 +21,7 @@ const batchFollowCountOfUser = async userIds => {
     result[followee._id] = followee.followerCount;
     return result;
   }, {});
-  return userIds.map(userId => (mapUser[userId] || null));
+  return userIds.map(userId => (mapUser[userId] || 0));
 };
 
 module.exports = {

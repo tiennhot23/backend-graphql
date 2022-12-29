@@ -1,5 +1,9 @@
 const { CommentModel } = require('../../models');
 const { gqlSelectedField } = require('../../utils/helpers');
+const {
+  getCachedClapCount,
+  cacheClapCount,
+} = require('../../utils/controllers');
 
 async function getPostComments(args, context, info) {
   try {
@@ -59,9 +63,32 @@ async function getPostOfComment(parent, args, context, info) {
   }
 }
 
+async function getCommentClapCount(parent, args, context, info) {
+  try {
+    const { _id: commentId } = parent;
+    const { loaders } = context;
+
+    const cachedClapCount = await getCachedClapCount('comment', commentId);
+    if (!cachedClapCount) {
+      const { commentClapCountLoader } = loaders;
+      return (commentClapCountLoader.load(commentId.toString())).then(async clapCount => {
+        if (clapCount > 1000) {
+          await cacheClapCount('comment', commentId, clapCount);
+        }
+        return clapCount;
+      });
+    }
+    return cachedClapCount;
+  } catch (error) {
+    logger.error('get comment\'s clap count error', { error: error.stack });
+    throw error;
+  }
+}
+
 module.exports = {
   getPostComments,
   getCommentReplies,
   getUserOfComment,
   getPostOfComment,
+  getCommentClapCount,
 };

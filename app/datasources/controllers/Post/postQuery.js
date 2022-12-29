@@ -2,7 +2,6 @@ const { PostModel } = require('../../models');
 const {
   getCachedClapCount,
   cacheClapCount,
-  calculateClapCount,
 } = require('../../utils/controllers');
 const { gqlSelectedField } = require('../../utils/helpers');
 
@@ -48,13 +47,17 @@ async function getPosts(args, context, info) {
 async function getPostClapCount(parent, args, context, info) {
   try {
     const { _id: postId } = parent;
+    const { loaders } = context;
+
     const cachedClapCount = await getCachedClapCount('post', postId);
-    if (!cachedClapCount || cachedClapCount < 1000) {
-      const clapCount = await calculateClapCount('post', postId);
-
-      await cacheClapCount('post', postId, clapCount);
-
-      return clapCount;
+    if (!cachedClapCount) {
+      const { postClapCountLoader } = loaders;
+      return (postClapCountLoader.load(postId.toString())).then(async clapCount => {
+        if (clapCount > 1000) {
+          await cacheClapCount('post', postId, clapCount);
+        }
+        return clapCount;
+      });
     }
     return cachedClapCount;
   } catch (error) {
