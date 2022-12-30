@@ -29,7 +29,7 @@ async function getPost(args, context, info) {
 async function getPosts(args, context, info) {
   try {
     const { input } = args;
-    const { owner, title, limit, offset } = input;
+    const { owner, title, limit = 10, offset = 0 } = input;
 
     const projection = gqlSelectedField.selectTopFields(info);
     const filter = {

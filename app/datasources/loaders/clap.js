@@ -1,9 +1,10 @@
 const _ = require('lodash');
+const { default: mongoose } = require('mongoose');
 const { ClapModel } = require('../models');
 
 const batchClapCountOfPost = async postIds => {
   const posts = await ClapModel.aggregate([
-    { $match: { post: { $in: postIds } } },
+    { $match: { post: { $in: postIds.map(postId => mongoose.Types.ObjectId(postId)) } } },
     { $group: { _id: '$post', clapCount: { $sum: '$count' } } },
     { $project: { _id: 1, clapCount: 1 } },
   ]);
@@ -16,7 +17,7 @@ const batchClapCountOfPost = async postIds => {
 
 const batchClapCountOfComment = async commentIds => {
   const comments = await ClapModel.aggregate([
-    { $match: { comment: { $in: commentIds } } },
+    { $match: { comment: { $in: commentIds.map(commentId => mongoose.Types.ObjectId(commentId)) } } },
     { $group: { _id: '$comment', clapCount: { $sum: '$count' } } },
     { $project: { _id: 1, clapCount: 1 } },
   ]);

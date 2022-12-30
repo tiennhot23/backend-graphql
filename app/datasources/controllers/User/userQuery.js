@@ -63,4 +63,19 @@ async function getFollowerCount(parent, args, context, info) {
   }
 }
 
-module.exports = { getMe, getUser, getUsers, getFollowerCount };
+async function getFollowers(parent, args, context, info) {
+  try {
+    const { _id: userId } = parent;
+    const { loaders } = context;
+    const { followerLoader, userLoader } = loaders;
+
+    // const followers = await FollowModel.find({ followee: userId }, 'follower').lean();
+    return (followerLoader.load(userId.toString()))
+      .then(followers => userLoader.loadMany(followers.map(follower => follower.toString())));
+  } catch (error) {
+    logger.error('get follower count error', { error: error.stack });
+    throw error;
+  }
+}
+
+module.exports = { getMe, getUser, getUsers, getFollowerCount, getFollowers };
