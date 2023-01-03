@@ -17,7 +17,7 @@ async function getPost(args, context, info) {
     };
 
     if (!signature) filter.status = 'Visible';
-    const post = await PostModel.findOne(filter, projection).lean();
+    const post = await PostModel.findOne(filter).select(projection).lean();
 
     return post;
   } catch (error) {
@@ -37,7 +37,10 @@ async function getPosts(args, context, info) {
       status: 'Visible',
     };
     if (owner) filter.owner = owner;
-    const posts = await PostModel.find(filter, projection).skip(offset).limit(limit).lean();
+    // TODO use last id to pagination
+    const posts = await PostModel.find(filter).select(projection)
+      .skip(offset).limit(limit)
+      .lean();
     return posts;
   } catch (error) {
     logger.error('get posts error', { error: error.stack });
@@ -51,8 +54,7 @@ async function getNewsFeed(args, context, info) {
     const newsFeed = await getCommonNewsFeed();
     const posts = await PostModel.find(
       { _id: { $in: newsFeed } },
-      projection,
-    ).lean();
+    ).select(projection).lean();
     return posts;
   } catch (error) {
     logger.error('get posts error', { error: error.stack });

@@ -8,5 +8,5 @@ type Comment {
   createdAt: DateTime
   updatedAt: DateTime
 
-  clapCount: Int
+  clapCount: Int @strictFields(strictFields: ["_id"])
 }

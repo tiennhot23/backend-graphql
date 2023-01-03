@@ -1,0 +1,3 @@
+directive @strictFields(
+  strictFields: [String] = [],
+) on FIELD_DEFINITION

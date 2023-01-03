@@ -43,8 +43,8 @@ async function updatePost(args, context, info) {
     const post = await PostModel.findOneAndUpdate(
       { _id: postId, owner: ownerId, status: { $ne: 'Deleted' } },
       { title, content, status },
-      { new: true, projection },
-    ).lean();
+      { new: true },
+    ).select(projection).lean();
 
     if (post && status === 'Visible') {
       await cachePost({

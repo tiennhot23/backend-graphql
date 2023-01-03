@@ -22,8 +22,8 @@ async function clapPost(args, context, info) {
     const clap = await ClapModel.findOneAndUpdate(
       { post: postId, user: userId, postOwner: post.owner },
       { $inc: { count } },
-      { new: true, projection: 'count', upsert: true },
-    ).lean();
+      { new: true, upsert: true },
+    ).select('count').lean();
 
     if (!clap) {
       return {

@@ -12,8 +12,8 @@ async function getPostComments(args, context, info) {
     const projection = gqlSelectedField.selectTopFields(info);
     const comments = await CommentModel.find(
       { post: postId, parent: null },
-      projection,
-    ).skip(offset).limit(limit).lean();
+    ).select(projection).skip(offset).limit(limit)
+      .lean();
 
     return comments;
   } catch (error) {
@@ -29,8 +29,8 @@ async function getCommentReplies(args, context, info) {
     const projection = gqlSelectedField.selectTopFields(info);
     const comments = await CommentModel.find(
       { parent: commentId },
-      projection,
-    ).skip(offset).limit(limit).lean();
+    ).select(projection).skip(offset).limit(limit)
+      .lean();
 
     return comments;
   } catch (error) {
@@ -68,9 +68,11 @@ async function getCommentClapCount(parent, args, context, info) {
     const { _id: commentId } = parent;
     const { loaders } = context;
 
+    // TODO nen biet khi nao reset cache (case: trong vong 1 phut clapcount tang len 1tr)
     const cachedClapCount = await getCachedClapCount('comment', commentId);
     if (!cachedClapCount) {
       const { commentClapCountLoader } = loaders;
+      // use await
       return (commentClapCountLoader.load(commentId.toString())).then(async clapCount => {
         if (clapCount > 1000) {
           await cacheClapCount('comment', commentId, clapCount);

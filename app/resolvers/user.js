@@ -4,4 +4,7 @@ const resolvers = {
 
 };
 
+// TODO write resolver for type field here
+// TODO should use specific name instead of parent
+
 module.exports = resolvers;

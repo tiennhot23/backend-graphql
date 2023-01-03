@@ -23,7 +23,7 @@ async function getUser(args, context, info) {
       username,
       email,
       lastName,
-    }, projection).lean();
+    }).select(projection).lean();
 
     return user;
   } catch (error) {
@@ -41,7 +41,7 @@ async function getUsers(args, context, info) {
         { firstName: new RegExp(name, 'i') },
         { lastName: new RegExp(name, 'i') },
       ],
-    }, projection).lean();
+    }).select(projection).lean();
 
     return users;
   } catch (error) {

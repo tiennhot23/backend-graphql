@@ -95,8 +95,8 @@ async function followUser(args, context, info) {
     const { signature } = context;
     const { _id } = signature;
 
-    const followee = await UserModel.exists({ _id: followeeId });
-    if (!followee) {
+    const followeeDoc = await UserModel.countDocuments({ _id: followeeId });
+    if (followeeDoc === 0) {
       return {
         isSuccess: false,
         message: 'Invalid user',

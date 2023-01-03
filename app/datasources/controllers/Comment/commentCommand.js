@@ -8,8 +8,8 @@ async function createComment(args, context, info) {
     const { postId, title, content } = input;
     const { _id: userId } = signature;
 
-    const post = await PostModel.exists({ _id: postId, status: 'Visible' });
-    if (!post) throw new Error('Invalid post');
+    const postDocCount = await PostModel.count({ _id: postId, status: 'Visible' });
+    if (postDocCount === 0) throw new Error('Invalid post');
     const comment = await CommentModel.create({
       post: postId,
       user: userId,
@@ -35,8 +35,8 @@ async function updateComment(args, context, info) {
     const comment = await CommentModel.findOneAndUpdate(
       { _id: commentId, user: userId },
       { title, content },
-      { new: true, projection },
-    ).lean();
+      { new: true },
+    ).select(projection).lean();
 
     return comment;
   } catch (error) {
